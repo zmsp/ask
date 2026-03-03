@@ -8,4 +8,4 @@
 # To enable GitHub Pages:
 #   Repo Settings → Pages → Source: "Deploy from branch" → branch: main, folder: / (root)
 
-theme: null
+theme: jekyll-theme-midnight

@@ -1,12 +1,27 @@
-# ask
+# ask — AI terminal assistant
 
-A terminal assistant that turns natural language into shell commands. It uses OpenAI or Google Gemini to generate commands, explain errors, or write git commits.
+> Turn plain-English descriptions into shell commands. Powered by OpenAI or Google Gemini.
 
-![Demo](https://i.imgur.com/rqw3my6.gif)
+![Demo](https://github.com/zmsp/ask/blob/main/docs/screenshot.gif?raw=true)
 
-## Install
+---
 
-**macOS / Linux**
+## Features
+
+- **Command generation** — describe a task, get a bash command, optionally run it
+- **Stdin piping** — `cat file | ask "..."` for instant context-aware answers
+- **Free-form chat** — use `-` prefix to ask anything without command wrapping
+- **`ask !!`** — explain the last command you ran
+- **`ask commit`** — AI writes your git commit message, then stages + commits
+- **Dangerous command guard** — requires typing `yes` for `rm -rf`, `sudo`, etc.
+- **Multi-provider** — OpenAI (default) or Google Gemini, cheapest models by default
+- **Persistent config** — saved to `~/.ask_config` (chmod 600)
+
+---
+
+## Quick Install
+
+### macOS / Linux
 ```bash
 curl -fsSL https://zmsp.github.io/ask/install.sh | bash
 ```
