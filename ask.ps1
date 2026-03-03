@@ -177,17 +177,13 @@ function Run-Setup {
         $hint = Dim "platform.openai.com/api-keys"
         Write-Host "$(Bold 'OpenAI API key')  $hint"
         $secureKey = Read-Host (Bold "Key (hidden)") -AsSecureString
-        $script:OpenAIApiKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-            [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
-        )
+        $script:OpenAIApiKey = [System.Net.NetworkCredential]::new("", $secureKey).Password
         if (-not $script:OpenAIApiKey) { Write-Host (Red "Key is required."); exit 1 }
     } else {
         $hint = Dim "aistudio.google.com/app/apikey"
         Write-Host "$(Bold 'Gemini API key')  $hint"
         $secureKey = Read-Host (Bold "Key (hidden)") -AsSecureString
-        $script:GeminiApiKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-            [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
-        )
+        $script:GeminiApiKey = [System.Net.NetworkCredential]::new("", $secureKey).Password
         if (-not $script:GeminiApiKey) { Write-Host (Red "Key is required."); exit 1 }
     }
 

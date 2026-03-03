@@ -111,10 +111,10 @@ if ! command -v "$BINARY_NAME" &>/dev/null; then
     echo
 fi
 
-# ── Setup wizard ──────────────────────────────────────────────────────────────
-echo "$(bold 'Running first-time setup…')"
+# ── Verification check ────────────────────────────────────────────────────────
+echo "$(bold 'Verification check…')"
 echo
-"$DEST" --setup
+"$DEST" "echo hello world"
 
 echo
 success "$(bold 'ask is ready!')"

@@ -113,10 +113,10 @@ if ($profileContent -notlike "*ask.ps1*") {
 Invoke-Expression $WRAPPER
 Write-Host ""
 
-# ── Setup wizard ──────────────────────────────────────────────────────────────
-Write-Host (Bold "Running first-time setup…")
+# ── Verification check ────────────────────────────────────────────────────────
+Write-Host (Bold "Verification check…")
 Write-Host ""
-& "$DEST_FILE" --setup
+& "$DEST_FILE" "echo hello world"
 
 Write-Host ""
 Success (Bold "ask is ready!")

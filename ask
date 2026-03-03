@@ -89,7 +89,7 @@ run_setup() {
     echo "  $(cyan '2)') Gemini    $(dim '(gemini-2.5-flash-lite — fastest & cheapest)')"
     echo
     while true; do
-        read -rp "$(bold 'Provider [1/2]:') " choice
+        read -rp "$(bold 'Provider [1/2]:') " choice < /dev/tty
         case "$choice" in
             1) PROVIDER="openai";  break ;;
             2) PROVIDER="gemini";  break ;;
@@ -106,13 +106,13 @@ run_setup() {
         echo "  $(cyan '3)') gpt-4.1"
         echo "  $(cyan '4)') gpt-4o-mini"
         echo "  $(cyan '5)') Custom…"
-        read -rp "$(bold 'Model [1-5, default 1]:') " m
+        read -rp "$(bold 'Model [1-5, default 1]:') " m < /dev/tty
         case "${m:-1}" in
             1) MODEL="gpt-4.1-nano" ;;
             2) MODEL="gpt-4.1-mini" ;;
             3) MODEL="gpt-4.1" ;;
             4) MODEL="gpt-4o-mini" ;;
-            5) read -rp "Model name: " MODEL ;;
+            5) read -rp "Model name: " MODEL < /dev/tty ;;
             *) MODEL="gpt-4.1-nano" ;;
         esac
     else
@@ -121,12 +121,12 @@ run_setup() {
         echo "  $(cyan '2)') gemini-2.5-flash"
         echo "  $(cyan '3)') gemini-2.5-pro"
         echo "  $(cyan '4)') Custom…"
-        read -rp "$(bold 'Model [1-4, default 1]:') " m
+        read -rp "$(bold 'Model [1-4, default 1]:') " m < /dev/tty
         case "${m:-1}" in
             1) MODEL="gemini-2.5-flash-lite" ;;
             2) MODEL="gemini-2.5-flash" ;;
             3) MODEL="gemini-2.5-pro" ;;
-            4) read -rp "Model name: " MODEL ;;
+            4) read -rp "Model name: " MODEL < /dev/tty ;;
             *) MODEL="gemini-2.5-flash-lite" ;;
         esac
     fi
@@ -135,17 +135,17 @@ run_setup() {
     echo
     if [[ "$PROVIDER" == "openai" ]]; then
         echo "$(bold 'OpenAI API key')  $(dim 'platform.openai.com/api-keys')"
-        read -rsp "$(bold 'Key (hidden):') " OPENAI_API_KEY; echo
+        read -rsp "$(bold 'Key (hidden):') " OPENAI_API_KEY < /dev/tty; echo
         [[ -z "$OPENAI_API_KEY" ]] && echo "$(red 'Key is required.')" && exit 1
     else
         echo "$(bold 'Gemini API key')  $(dim 'aistudio.google.com/app/apikey')"
-        read -rsp "$(bold 'Key (hidden):') " GEMINI_API_KEY; echo
+        read -rsp "$(bold 'Key (hidden):') " GEMINI_API_KEY < /dev/tty; echo
         [[ -z "$GEMINI_API_KEY" ]] && echo "$(red 'Key is required.')" && exit 1
     fi
 
     # ── Max tokens ────────────────────────────────────────────────────────────
     echo
-    read -rp "$(bold 'Max response tokens') $(dim '[default 200]:') " mt
+    read -rp "$(bold 'Max response tokens') $(dim '[default 200]:') " mt < /dev/tty
     [[ -n "$mt" ]] && MAX_TOKENS="$mt"
 
     write_config
@@ -284,7 +284,7 @@ confirm_dangerous() {
     echo "$(yellow '⚠  Dangerous command — review before running:')"
     echo "   $1"
     echo
-    read -rp "$(bold 'Type  yes  to run, anything else to cancel:') " ans
+    read -rp "$(bold 'Type  yes  to run, anything else to cancel:') " ans < /dev/tty
     [[ "$ans" == "yes" ]]
 }
 
@@ -377,7 +377,7 @@ Git status:\n${git_status}\n\nGit diff:\n${git_diff}"
     echo "$commit_msg"
     echo
 
-    read -rp "$(bold 'Commit with this message? (y/n):') " confirm
+    read -rp "$(bold 'Commit with this message? (y/n):') " confirm < /dev/tty
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         git add -A
         git commit -m "$commit_msg"
@@ -454,14 +454,14 @@ if [[ "$skip_run" != true ]]; then
     danger_pattern='(rm[[:space:]]+-[^ ]*r|-rf[[:space:]]|sudo[[:space:]]|>[[:space:]]*/dev/|dd[[:space:]]+if=|\|[[:space:]]*(sh|bash|zsh)[[:space:]]*$|chmod[[:space:]]+-R[[:space:]]+[0-7]*7|mkfs)'
     if printf '%s' "$command" | grep -qE "$danger_pattern"; then
         echo "$(yellow '⚠  This command looks dangerous. Type  yes  to run, anything else cancels.')"
-        read -rp "$(bold 'Run ANYWAY?') " ans
+        read -rp "$(bold 'Run ANYWAY?') " ans < /dev/tty
         if [[ "$ans" == "yes" ]]; then
             eval "$command"
         else
             echo "Cancelled."
         fi
     else
-        read -rp "$(bold 'Run this command?') $(dim '(y/n):') " ans
+        read -rp "$(bold 'Run this command?') $(dim '(y/n):') " ans < /dev/tty
         if [[ "$ans" =~ ^[Yy]$ ]]; then
             eval "$command"
         else
