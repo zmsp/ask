@@ -2,15 +2,8 @@
 # =============================================================================
 #  install.ps1 — installer for ask.ps1 (AI terminal assistant for Windows)
 #
-#  Usage (from PowerShell — run as Administrator for system-wide install):
+#  Usage (from PowerShell):
 #    irm https://zmsp.github.io/ask/install.ps1 | iex
-#
-#  What it does:
-#    1. Checks for required PowerShell version
-#    2. Downloads the latest ask.ps1 from GitHub
-#    3. Installs it to a directory in your PATH
-#    4. Creates an `ask` wrapper function in your $PROFILE
-#    5. Runs the interactive setup wizard
 # =============================================================================
 #Requires -Version 5.1
 $ErrorActionPreference = "Stop"
@@ -18,36 +11,41 @@ $ErrorActionPreference = "Stop"
 # ── Config ────────────────────────────────────────────────────────────────────
 $REPO      = "zmsp/ask"
 $RAW_URL   = "https://raw.githubusercontent.com/$REPO/main/ask.ps1"
-$DEST_DIR  = "$env:USERPROFILE\bin"
+$DEST_DIR  = Join-Path ($env:USERPROFILE ?? $env:HOME) "bin"
 $DEST_FILE = Join-Path $DEST_DIR "ask.ps1"
 $WRAPPER   = "function ask { & '$DEST_FILE' @args }"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
-function Bold  { "`e[1m$args`e[0m" }
-function Green { "`e[32m$args`e[0m" }
-function Yellow{ "`e[33m$args`e[0m" }
-function Red   { "`e[31m$args`e[0m" }
-function Dim   { "`e[2m$args`e[0m" }
+function Bold   { param($t) "`e[1m$t`e[0m" }
+function Green  { param($t) "`e[32m$t`e[0m" }
+function Yellow { param($t) "`e[33m$t`e[0m" }
+function Red    { param($t) "`e[31m$t`e[0m" }
+function Dim    { param($t) "`e[2m$t`e[0m" }
 
-function Info    { Write-Host "  $(Dim '·') $args" }
-function Success { Write-Host "  $(Green '✔') $args" }
-function Warn    { Write-Host "  $(Yellow '⚠') $args" }
-function Fail    { Write-Host "  $(Red '✖') $args" -ForegroundColor Red; exit 1 }
+function Info    { $s = Dim "·"; Write-Host "  $s $args" }
+function Success { $s = Green "✔"; Write-Host "  $s $args" }
+function Warn    { $s = Yellow "⚠"; Write-Host "  $s $args" }
+function Fail    { $s = Red "✖"; Write-Host "  $s $args" -ForegroundColor Red; exit 1 }
 
 # =============================================================================
 #  MAIN
 # =============================================================================
 Write-Host ""
-Write-Host (Bold "╔════════════════════════════════════╗")
-Write-Host (Bold "║   ask  ·  AI terminal assistant    ║")
-Write-Host (Bold "║   Windows installer                ║")
-Write-Host (Bold "╚════════════════════════════════════╝")
+$b1 = Bold "╔════════════════════════════════════╗"
+$b2 = Bold "║   ask  ·  AI terminal assistant    ║"
+$b3 = Bold "║   Windows installer                ║"
+$b4 = Bold "╚════════════════════════════════════╝"
+Write-Host $b1
+Write-Host $b2
+Write-Host $b3
+Write-Host $b4
 Write-Host ""
 Info "Repository: https://github.com/$REPO"
 Write-Host ""
 
 # ── PowerShell version check ──────────────────────────────────────────────────
-Info "PowerShell version: $($PSVersionTable.PSVersion)"
+$psv = $PSVersionTable.PSVersion
+Info "PowerShell version: $psv"
 if ($PSVersionTable.PSVersion.Major -lt 5) {
     Fail "PowerShell 5.1 or later is required. Download from https://aka.ms/powershell"
 }
@@ -98,7 +96,6 @@ if ($currentPath -notlike "*$DEST_DIR*") {
 Write-Host ""
 
 # ── Add shell wrapper to $PROFILE ─────────────────────────────────────────────
-# The wrapper lets users type `ask` instead of `ask.ps1` in PowerShell sessions
 Info "Adding 'ask' function to PowerShell profile…"
 if (-not (Test-Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force | Out-Null
@@ -119,18 +116,20 @@ Write-Host ""
 # ── Setup wizard ──────────────────────────────────────────────────────────────
 Write-Host (Bold "Running first-time setup…")
 Write-Host ""
-& $DEST_FILE --setup
+& "$DEST_FILE" --setup
 
 Write-Host ""
 Success (Bold "ask is ready!")
 Write-Host ""
-Write-Host "  $(Dim 'Try it (restart your terminal first, or run:')"
+$s1 = Dim "Try it (restart your terminal first, or run:"
+Write-Host "  $s1"
 Write-Host "    . `$PROFILE"
 Write-Host "  then:"
 Write-Host "    ask `"list all files modified today`""
 Write-Host "    ask !!"
 Write-Host "    ask commit"
 Write-Host ""
-Write-Host "  $(Dim 'Re-run setup anytime:')"
+$s2 = Dim "Re-run setup anytime:"
+Write-Host "  $s2"
 Write-Host "    ask --setup"
 Write-Host ""
