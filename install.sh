@@ -3,7 +3,7 @@
 #  install.sh — installer for ask (AI terminal assistant)
 #
 #  Usage:
-#    curl -fsSL https://zmsp.github.io/ask-bash/install.sh | bash
+#    curl -fsSL https://zmsp.github.io/ask/install.sh | bash
 #
 #  What it does:
 #    1. Checks for required dependencies (curl, jq)
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
-REPO="zmsp/ask-bash"
+REPO="zmsp/ask"
 RAW_URL="https://raw.githubusercontent.com/${REPO}/main/ask"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="ask"

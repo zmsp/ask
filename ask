@@ -8,7 +8,7 @@
 #  Supports:  OpenAI (gpt-4.1-nano default) · Google Gemini (2.5-flash-lite)
 #  Requires:  curl · jq · bash 4+
 #
-#  Project:   https://github.com/zmsp/ask-bash
+#  Project:   https://github.com/zmsp/ask
 #  License:   MIT
 # =============================================================================
 set -euo pipefail
@@ -202,7 +202,7 @@ $(bold 'PROVIDERS & DEFAULT MODELS')
   openai  →  gpt-4.1-nano        \$0.10 / 1M input tokens
   gemini  →  gemini-2.5-flash-lite
 
-$(bold 'PROJECT')  https://github.com/zmsp/ask-bash
+$(bold 'PROJECT')  https://github.com/zmsp/ask
 EOF
 }
 
