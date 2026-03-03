@@ -26,7 +26,8 @@ run_demo() {
     printf '\033[1m$ \033[0m'
     typewriter "$cmd"
     eval "$cmd"
-    sleep 2
+    echo ""
+    sleep 3
     clear
 }
 

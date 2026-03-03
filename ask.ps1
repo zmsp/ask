@@ -511,29 +511,24 @@ Resolve-DefaultModel
 # ── Read piped stdin (if any) ─────────────────────────────────────────────────
 $stdinData = ""
 try {
-    if ([Console]::IsInputRedirected) {
-        $stdinData = $input | Out-String
-    }
+    if ([Console]::IsInputRedirected) { $stdinData = $input | Out-String }
 } catch { }
 
 # ── Build the prompt ──────────────────────────────────────────────────────────
 $userInput = $allArgs -join " "
 $skipRun   = $false
 
-if ($userInput.StartsWith("-")) {
+if ($stdinData.Trim()) {
+    # Piped content exists: treat as a free-form query with context.
+    $prompt  = "$userInput`n`nContext (piped input):`n$stdinData"
+    $skipRun = $true
+} elseif ($userInput.StartsWith("-")) {
     # Free-form mode: flags like -q, -e, etc.
     $prompt  = $userInput
     $skipRun = $true
 } else {
     # Command generation mode — ask for a raw PowerShell command
     $prompt  = "Output only the raw PowerShell command to accomplish this task — no explanation, no markdown, no code fences: $userInput"
-    $skipRun = $false
-}
-
-# Append piped stdin as context and switch to free-form mode
-if ($stdinData.Trim()) {
-    $prompt  += "`n`nContext (piped input):`n$stdinData"
-    $skipRun  = $true
 }
 
 if ($env:VERBOSE -eq "true") {

@@ -15,7 +15,7 @@ set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
 REPO="zmsp/ask"
-RAW_URL="https://raw.githubusercontent.com/${REPO}/main/ask"
+RAW_URL="https://raw.githubusercontent.com/${REPO}/main/ask.sh"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="ask"
 

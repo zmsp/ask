@@ -8,14 +8,14 @@
 
 ## Features
 
-- **Command generation** — describe a task, get a bash command, optionally run it
-- **Stdin piping** — `cat file | ask "..."` for instant context-aware answers
-- **Free-form chat** — use `-` prefix to ask anything without command wrapping
-- **`ask !!`** — explain the last command you ran
-- **`ask commit`** — AI writes your git commit message, then stages + commits
-- **Dangerous command guard** — requires typing `yes` for `rm -rf`, `sudo`, etc.
-- **Multi-provider** — OpenAI (default) or Google Gemini, cheapest models by default
-- **Persistent config** — saved to `~/.ask_config` (chmod 600)
+- **Command generation** — Get shell commands from plain English.
+- **Stdin piping** — Pipe content for context (`cat file | ask "..."`).
+- **Free-form chat** — Chat directly with the AI using a `-` prefix.
+- **`ask !!`** — Explain the last command from your history.
+- **`ask commit`** — Generate a commit message for current changes and commit them.
+- **Dangerous command guard** — Warns before running risky commands (`rm -rf`, `sudo`).
+- **Multi-provider** — Supports OpenAI and Google Gemini.
+- **Persistent config** — Saves settings to `~/.ask_config`.
 
 ---
 
@@ -28,7 +28,7 @@ curl -fsSL https://zmsp.github.io/ask/install.sh | bash
 
 Or manually:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zmsp/ask/main/ask -o /usr/local/bin/ask
+curl -fsSL https://raw.githubusercontent.com/zmsp/ask/main/ask.sh -o /usr/local/bin/ask
 chmod +x /usr/local/bin/ask
 ask --setup
 ```
