@@ -1,0 +1,11 @@
+# GitHub Pages configuration
+# This serves the repo root as the GitHub Pages site at:
+#   https://zmsp.github.io/ask-bash/
+#
+# install.sh will be accessible at:
+#   https://zmsp.github.io/ask-bash/install.sh
+#
+# To enable GitHub Pages:
+#   Repo Settings → Pages → Source: "Deploy from branch" → branch: main, folder: / (root)
+
+theme: null
