@@ -9,9 +9,9 @@
 $ErrorActionPreference = "Stop"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-$REPO      = "zmsp/ask"
-$RAW_URL   = "https://raw.githubusercontent.com/$REPO/main/ask.ps1"
-$DEST_DIR  = Join-Path ($env:USERPROFILE ?? $env:HOME) "bin"
+$REPO      = if ($env:ASK_REPO) { $env:ASK_REPO } else { "zmsp/ask" }
+$RAW_URL   = if ($env:ASK_RAW_URL) { $env:ASK_RAW_URL } else { "https://raw.githubusercontent.com/$REPO/main/ask.ps1" }
+$DEST_DIR  = if ($env:ASK_INSTALL_DIR) { $env:ASK_INSTALL_DIR } else { Join-Path ($env:USERPROFILE ?? $env:HOME) "bin" }
 $DEST_FILE = Join-Path $DEST_DIR "ask.ps1"
 $WRAPPER   = "function ask { & '$DEST_FILE' @args }"
 
@@ -87,7 +87,9 @@ Write-Host ""
 $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($currentPath -notlike "*$DEST_DIR*") {
     Info "Adding $DEST_DIR to user PATH…"
-    [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$DEST_DIR", "User")
+    if ($env:ASK_TEST_MODE -ne "true") {
+        [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$DEST_DIR", "User")
+    }
     $env:PATH += ";$DEST_DIR"
     Success "PATH updated"
 } else {
@@ -116,7 +118,11 @@ Write-Host ""
 # ── Verification check ────────────────────────────────────────────────────────
 Write-Host (Bold "Verification check…")
 Write-Host ""
-& "$DEST_FILE" "echo hello world"
+if ($env:ASK_SKIP_VERIFY -eq "true") {
+    & "$DEST_FILE" --version
+} else {
+    & "$DEST_FILE" "echo hello world"
+}
 
 Write-Host ""
 Success (Bold "ask is ready!")

@@ -1,6 +1,6 @@
 # ask — AI terminal assistant
 
-> Turn plain-English descriptions into shell commands. Powered by OpenAI or Google Gemini.
+> Turn plain-English descriptions into shell commands. Powered by OpenAI, Google Gemini, or local Ollama. Zero external dependencies.
 
 ![Demo](https://github.com/zmsp/ask/blob/main/docs/screenshot.gif?raw=true)
 
@@ -8,14 +8,21 @@
 
 ## Features
 
-- **Command generation** — Get shell commands from plain English.
-- **Stdin piping** — Pipe content for context (`cat file | ask "..."`).
-- **Free-form chat** — Chat directly with the AI using a `-` prefix.
-- **`ask !!`** — Explain the last command from your history.
-- **`ask commit`** — Generate a commit message for current changes and commit them.
-- **Dangerous command guard** — Warns before running risky commands (`rm -rf`, `sudo`).
-- **Multi-provider** — Supports OpenAI and Google Gemini.
-- **Persistent config** — Saves settings to `~/.ask_config`.
+- **Command generation** — Get shell commands tailored to your OS, architecture, and shell.
+- **Interactive execution** — `[y]es` run, `[e]dit` in readline before running, `[c]opy` to clipboard, or `[n]o`.
+- **`ask fix`** — Diagnose and correct the last failed command or piped error stream.
+- **`ask cheat <tool>`** — Instant 5-recipe cheatsheet for tricky utilities (`tar`, `ffmpeg`, `jq`).
+- **`ask !!`** — Explain the last shell command from history.
+- **Git workflow suite**:
+  - **`ask commit`** — Generate clean commit messages from git status & diff.
+  - **`ask review`** — AI code review on uncommitted or branch changes.
+  - **`ask branch <task>`** — Semantic kebab-case branch name generator + checkout.
+- **Local AI support** — Run completely offline and free via Ollama (no API key required).
+- **Token & query tracker** — `ask --stats` tracks usage across models and providers.
+- **Inline shell keybinds** — `ask --init` provides `Ctrl-X Ctrl-A` inline completion for Bash, Zsh, and PowerShell.
+- **`--raw` scripting flag** — Pure command string output for aliases, scripts, and shell integrations.
+- **Dangerous command guard** — Warns and requires explicit confirmation for risky patterns (`rm -rf`, `sudo`).
+- **0 external dependencies** — Written in pure Bash and PowerShell; uses only standard OS utilities.
 
 ---
 
@@ -56,16 +63,16 @@ ask --setup
 
 | Tool | Install |
 |------|---------|
-| `bash` 4+ | Pre-installed on macOS/Linux |
+| `bash` 3.2+ or `pwsh` | Pre-installed on macOS/Linux/Windows |
 | `curl` | `brew install curl` / `apt install curl` |
-| `jq` | `brew install jq` / `apt install jq` |
-| AI API key | [OpenAI](https://platform.openai.com/api-keys) or [Gemini](https://aistudio.google.com/app/apikey) |
+| `jq` | `brew install jq` / `apt install jq` (Bash script only) |
+| AI provider | [OpenAI](https://platform.openai.com/api-keys), [Gemini](https://aistudio.google.com/app/apikey), or [Ollama](https://ollama.com) (local) |
 
 ---
 
 ## Usage
 
-### Generate & run a bash command
+### Generate & run a shell command
 ```bash
 ask "list all .log files modified in the last 7 days"
 ask "restart nginx if it's not running"
@@ -74,12 +81,57 @@ ask "find the 5 largest files in my home directory"
 
 ```
 Suggested:
-find ~ -type f -printf '%s %p\n' | sort -rn | head -5
+find ~ -type f -mtime -7 -name "*.log"
 
-Run this command? (y/n): y
+Run? [y]es / [e]dit / [c]opy / [n]o: e
+Edit: find ~ -type f -mtime -14 -name "*.log"
+```
+- `y` runs the command immediately.
+- `e` lets you edit the command inline in terminal readline before executing.
+- `c` copies it directly to your clipboard (`pbcopy`, `wl-copy`, `xclip`, or `clip.exe`).
+- `n` cancels.
+
+### Diagnose & fix errors (`ask fix`)
+```bash
+# Fix last failed command from shell history
+docker run -p 80:80 myapp
+# Error: port 80 is already allocated
+ask fix
+
+# Or pipe stderr directly
+cargo build 2>&1 | ask fix
+git push 2>&1    | ask fix
 ```
 
-### Free-form AI question (no command wrapping)
+### CLI Cheatsheet (`ask cheat <tool>`)
+```bash
+ask cheat tar
+ask cheat ffmpeg
+ask cheat jq
+```
+
+### Explain the last command (`ask !!`)
+```bash
+tar -czvf backup.tar.gz --exclude="*.log" ./data
+ask !!
+# → Explains flags, paths, compression behavior, and risks
+```
+
+### Code review & Git helpers
+```bash
+# Concise senior review of current uncommitted or branch diff
+ask review
+
+# Generate semantic branch name and switch to it
+ask branch "add user password reset with email token"
+# → Suggested: feat/user-password-reset
+# Create and switch to this branch? [y]es / [c]opy / [n]o: y
+
+# AI-powered commit message generator
+ask commit
+```
+
+### Free-form AI question
 ```bash
 ask -q "What does HEAD~3 mean in git?"
 ask -e "Explain the difference between CMD and ENTRYPOINT in Docker"
@@ -92,64 +144,60 @@ git diff       | ask "summarise these changes"
 cat config.yml | ask "is anything misconfigured here?"
 ```
 
-### Explain the last command
+### Track token usage & stats
 ```bash
-ls -la /etc/hosts
-ask !!
-# → Explains ls, -l (long format), -a (hidden files), and the path
+ask --stats
+```
+```
+ask · Usage Statistics
+Tracked in: ~/.ask_stats
+
+Total queries:      14
+Prompt tokens:      2,350
+Completion tokens:  410
+Total tokens:       2,760
+
+Queries by provider/model:
+  openai (gpt-4.1-nano)            10
+  ollama (llama3.2)                4
 ```
 
-### AI-powered git commit
+### Shell Keybinding (Inline AI expansion)
+Press `Ctrl-X Ctrl-A` on any line to replace what you typed with the AI-suggested command.
+
 ```bash
-ask commit
-```
-```
-Git status:
- M src/index.js
- M README.md
+# Print keybind configuration for your shell:
+ask --init bash  # or zsh or pwsh
 
-Suggested commit message:
-Update index.js routing and expand README usage section
-
-Commit with this message? (y/n): y
-[main 3f2a1b4] Update index.js routing and expand README usage section
-```
-
-### Dangerous command guard
-```bash
-ask "recursively delete all files in /tmp/cache"
-
-Suggested:
-rm -rf /tmp/cache/*
-
-⚠  This command looks dangerous. Type  yes  to run, anything else cancels.
-Run ANYWAY? yes
+# Quick install into ~/.zshrc:
+eval "$(ask --init zsh)"
 ```
 
 ---
 
 ## Configuration
 
-Configuration is stored in `~/.ask_config` (user-readable only).
+Configuration is stored in `~/.ask_config` (mode 600, user-readable only).
 
 Run the interactive wizard:
 ```bash
 ask --setup
 ```
 
-Or edit the file directly:
+Or edit directly:
 ```ini
 # ~/.ask_config
-provider=openai          # openai | gemini
+provider=openai          # openai | gemini | ollama
 model=gpt-4.1-nano       # leave blank for cheapest default
 max_tokens=200
+ollama_endpoint=http://localhost:11434/v1
 openai_api_key=sk-...
 gemini_api_key=AIza...
 ```
 
 ### Environment variables
 
-Environment variables always take priority over the config file:
+Environment variables take priority over config file values:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
@@ -165,9 +213,11 @@ export VERBOSE=true           # print debug info
 |----------|--------------|--------------------------------------|
 | `openai` | `gpt-4.1-nano` | $0.10 / $0.40 |
 | `gemini` | `gemini-2.5-flash-lite` | $0.10 / $0.40 |
+| `ollama` | `llama3.2` | Free (runs locally) |
 
-**OpenAI models:** `gpt-4.1-nano` · `gpt-4.1-mini` · `gpt-4.1` · `gpt-4o-mini`  
-**Gemini models:** `gemini-2.5-flash-lite` · `gemini-2.5-flash` · `gemini-2.5-pro`
+**OpenAI models:** `gpt-4.1-nano` · `gpt-4.1-mini` · `gpt-4.1` · `gpt-4o` · `gpt-4o-mini` · `o3-mini`  
+**Gemini models:** `gemini-2.5-flash-lite` · `gemini-2.5-flash` · `gemini-2.5-pro` · `gemini-3.5-flash-lite` · `gemini-3.8-flash` · `gemini-flash-latest` (`latest`) · `gemini-flash-lite-latest` · `gemini-pro-latest`  
+**Ollama models:** `llama3.2` · `qwen2.5-coder` · `codellama` · any local model
 
 ---
 

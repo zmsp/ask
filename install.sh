@@ -14,10 +14,10 @@
 set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
-REPO="zmsp/ask"
-RAW_URL="https://raw.githubusercontent.com/${REPO}/main/ask.sh"
-INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="ask"
+REPO="${ASK_REPO:-zmsp/ask}"
+RAW_URL="${ASK_RAW_URL:-https://raw.githubusercontent.com/${REPO}/main/ask.sh}"
+INSTALL_DIR="${ASK_INSTALL_DIR:-/usr/local/bin}"
+BINARY_NAME="${ASK_BINARY_NAME:-ask}"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 bold()  { printf '\033[1m%s\033[0m' "$*"; }
@@ -114,7 +114,11 @@ fi
 # ── Verification check ────────────────────────────────────────────────────────
 echo "$(bold 'Verification check…')"
 echo
-"$DEST" "echo hello world"
+if [[ "${ASK_SKIP_VERIFY:-false}" == "true" ]]; then
+    "$DEST" --version
+else
+    "$DEST" "echo hello world"
+fi
 
 echo
 success "$(bold 'ask is ready!')"
