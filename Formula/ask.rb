@@ -1,8 +1,8 @@
 class Ask < Formula
   desc "AI terminal assistant for plain-English shell commands and chat"
   homepage "https://github.com/zmsp/ask"
-  url "https://github.com/zmsp/ask/archive/refs/tags/v2.1.0.tar.gz"
-  sha256 "219c7f6e9fe8dc0e48faf596f488b5f69b4c2f7aefb9ba64b4c9d63b32980771"
+  url "https://github.com/zmsp/ask/archive/refs/tags/v2.1.1.tar.gz"
+  sha256 "cd8a3433b870be23167bab168a6bdc96c4466dcdc3edab9dc257f87fd6d3c3d3"
   license "MIT"
 
   depends_on "jq"
@@ -12,6 +12,6 @@ class Ask < Formula
   end
 
   test do
-    assert_match "ask v2.1.0", shell_output("#{bin}/ask --version")
+    assert_match "ask v2.1.1", shell_output("#{bin}/ask --version")
   end
 end
