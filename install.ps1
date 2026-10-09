@@ -6,7 +6,14 @@
 #    irm https://zmsp.github.io/ask/install.ps1 | iex
 # =============================================================================
 #Requires -Version 5.1
+param(
+    [switch]$Uninstall = $false
+)
 $ErrorActionPreference = "Stop"
+
+if ($env:ASK_UNINSTALL -eq "1" -or $env:ASK_UNINSTALL -eq "true") {
+    $Uninstall = $true
+}
 
 # ── Config ────────────────────────────────────────────────────────────────────
 $REPO      = if ($env:ASK_REPO) { $env:ASK_REPO } else { "zmsp/ask" }
@@ -34,6 +41,44 @@ function Fail    { $s = Red "✖"; Write-Host "  $s $args" -ForegroundColor Red;
 # Return early if sourced as a library/test fixture
 if ($MyInvocation.InvocationName -eq '.' -or $env:ASK_SOURCE_ONLY -eq '1') {
     return
+}
+
+# Handle uninstall
+if ($Uninstall) {
+    Write-Host ""
+    Write-Host (Bold "╔════════════════════════════════════╗")
+    Write-Host (Bold "║   ask  ·  AI terminal assistant    ║")
+    Write-Host (Bold "║   Windows uninstaller              ║")
+    Write-Host (Bold "╚════════════════════════════════════╝")
+    Write-Host ""
+
+    $removed = $false
+    if (Test-Path $DEST_FILE) {
+        Info "Removing $DEST_FILE …"
+        Remove-Item -Path $DEST_FILE -Force
+        Success "Removed $DEST_FILE"
+        $removed = $true
+    }
+
+    if (Test-Path $PROFILE) {
+        Info "Cleaning PowerShell profile $PROFILE …"
+        $content = Get-Content $PROFILE -Raw -ErrorAction SilentlyContinue
+        if ($content -match "ask") {
+            $lines = ($content -split "`r?`n" | Where-Object { $_ -notmatch 'ask — AI terminal assistant' -and $_ -notmatch 'function ask' })
+            Set-Content -Path $PROFILE -Value ($lines -join "`n").Trim()
+            Success "Cleaned ask wrapper from profile"
+        }
+    }
+
+    Write-Host ""
+    if ($removed) {
+        Success (Bold "ask uninstalled successfully!")
+    } else {
+        Warn "No installed ask.ps1 found at $DEST_FILE"
+    }
+    Info "Configuration ~/.ask_config preserved."
+    Write-Host ""
+    exit 0
 }
 
 Write-Host ""

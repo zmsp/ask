@@ -28,7 +28,13 @@
 
 ## Quick Install
 
-### macOS / Linux
+### macOS (Homebrew — Recommended)
+```bash
+brew tap zmsp/ask
+brew install ask
+```
+
+### macOS / Linux (Installer Script)
 ```bash
 curl -fsSL https://zmsp.github.io/ask/install.sh | bash
 ```
@@ -52,9 +58,23 @@ irm https://raw.githubusercontent.com/zmsp/ask/main/ask.ps1 -OutFile "$env:USERP
 ask --setup
 ```
 
+## Uninstall
+
+```bash
+# Homebrew
+brew uninstall ask
+
+# macOS / Linux installer
+curl -fsSL https://zmsp.github.io/ask/install.sh | bash -s -- --uninstall
+
+# Windows (PowerShell)
+& ([scriptblock]::Create((irm https://zmsp.github.io/ask/install.ps1))) -Uninstall
+```
+
 | Platform | Script | Installer |
 |----------|--------|-----------|
-| macOS / Linux | `ask` (bash) | `install.sh` |
+| macOS (Brew) | `Formula/ask.rb` | `brew install zmsp/ask/ask` |
+| macOS / Linux | `ask.sh` (bash) | `install.sh` |
 | Windows | `ask.ps1` (PowerShell 5.1+) | `install.ps1` |
 
 ---

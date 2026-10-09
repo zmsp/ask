@@ -124,6 +124,32 @@ function Test-ProfileIdempotency {
     Assert-Contains $installOutput "already in profile" "Idempotent profile registration"
 }
 
+function Test-UninstallExecution {
+    $destFile = Join-Path $env:ASK_INSTALL_DIR "ask.ps1"
+    if (-not (Test-Path $destFile)) {
+        throw "Expected $destFile to exist prior to uninstall test"
+    }
+
+    $uninstallOutput = (& pwsh -NoProfile -File $InstallPs1 -Uninstall 6>&1) | Out-String
+    Assert-Contains $uninstallOutput "uninstalled successfully!" "Uninstall reports success"
+
+    if (Test-Path $destFile) {
+        throw "Expected $destFile to be deleted after uninstall"
+    }
+
+    if (Test-Path $PROFILE) {
+        $profileContent = Get-Content $PROFILE -Raw
+        if ($profileContent -match "function ask") {
+            throw "Expected profile wrapper to be removed"
+        }
+    }
+}
+
+function Test-UninstallWhenNotInstalled {
+    $uninstallOutput = (& pwsh -NoProfile -File $InstallPs1 -Uninstall 6>&1) | Out-String
+    Assert-Contains $uninstallOutput "No installed ask.ps1 found" "Reports not installed"
+}
+
 # =============================================================================
 #  RUNNER
 # =============================================================================
@@ -131,7 +157,9 @@ function Test-ProfileIdempotency {
 $AllTests = @(
     "Test-InstallHelpers",
     "Test-FullInstallExecution",
-    "Test-ProfileIdempotency"
+    "Test-ProfileIdempotency",
+    "Test-UninstallExecution",
+    "Test-UninstallWhenNotInstalled"
 )
 
 try {
