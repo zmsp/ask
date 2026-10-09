@@ -30,6 +30,12 @@ function Fail    { $s = Red "✖"; Write-Host "  $s $args" -ForegroundColor Red;
 # =============================================================================
 #  MAIN
 # =============================================================================
+
+# Return early if sourced as a library/test fixture
+if ($MyInvocation.InvocationName -eq '.' -or $env:ASK_SOURCE_ONLY -eq '1') {
+    return
+}
+
 Write-Host ""
 $b1 = Bold "╔════════════════════════════════════╗"
 $b2 = Bold "║   ask  ·  AI terminal assistant    ║"
@@ -76,7 +82,12 @@ if (-not (Test-Path $DEST_DIR)) {
 # ── Download ──────────────────────────────────────────────────────────────────
 Info "Downloading ask.ps1 from GitHub…"
 try {
-    Invoke-WebRequest -Uri $RAW_URL -OutFile $DEST_FILE -UseBasicParsing
+    if ($RAW_URL -like "file://*") {
+        $localPath = [System.Uri]::new($RAW_URL).LocalPath
+        Copy-Item -Path $localPath -Destination $DEST_FILE -Force
+    } else {
+        Invoke-WebRequest -Uri $RAW_URL -OutFile $DEST_FILE -UseBasicParsing
+    }
     Success "Downloaded → $DEST_FILE"
 } catch {
     Fail "Download failed: $_. Check your network connection."

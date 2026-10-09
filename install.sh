@@ -46,6 +46,12 @@ check_dependency() {
 # =============================================================================
 #  MAIN
 # =============================================================================
+
+# Return early if sourced as a library/test fixture
+if [[ "${BASH_SOURCE[0]}" != "${0}" || "${ASK_SOURCE_ONLY:-}" == "1" ]]; then
+    return 0 2>/dev/null || exit 0
+fi
+
 echo
 echo "$(bold '╔════════════════════════════════════╗')"
 echo "$(bold '║   ask  ·  AI terminal assistant    ║')"

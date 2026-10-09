@@ -210,7 +210,7 @@ function Test-RecordStatsAndShow {
     Record-Stats "openai" "gpt-4.1-nano" 50 25
     Record-Stats "gemini" "gemini-2.5-flash-lite" 100 50
 
-    $output = (Show-Stats | Out-String)
+    $output = (Show-Stats 6>&1 | Out-String)
     Assert-Contains $output "Total queries:      3" "Show-Stats query count"
     Assert-Contains $output "Prompt tokens:      300" "Show-Stats prompt tokens"
     Assert-Contains $output "Completion tokens:  150" "Show-Stats completion tokens"
@@ -220,16 +220,16 @@ function Test-RecordStatsAndShow {
 function Test-ShowInitSnippet {
     . $AskPs1
 
-    $snippet = (Show-InitSnippet "pwsh" | Out-String)
+    $snippet = (Show-InitSnippet "pwsh" 6>&1 | Out-String)
     Assert-Contains $snippet "Set-PSReadLineKeyHandler" "Init snippet keyhandler"
-    Assert-Contains $snippet "ask.ps1" "Init snippet script reference"
+    Assert-Contains $snippet "ask --raw" "Init snippet script reference"
 }
 
 function Test-StripFences {
     . $AskPs1
 
     $tripleTick = [string][char]96 + [char]96 + [char]96
-    $fenced = "$tripleTick`nbash`necho hello`n$tripleTick"
+    $fenced = "${tripleTick}bash`necho hello`n${tripleTick}"
     $stripped = Strip-Fences $fenced
     Assert-Equal "echo hello" $stripped "Strip-Fences markdown fence"
 }
@@ -239,7 +239,8 @@ function Test-Dangerous {
 
     Assert-Equal $true (Test-Dangerous "rm -rf /") "Detects rm -rf"
     Assert-Equal $true (Test-Dangerous "Remove-Item foo -Recurse") "Detects Remove-Item -Recurse"
-    Assert-Equal $true (Test-Dangerous "rmdir /s /q test") "Detects rmdir /s /q"
+    Assert-Equal $true (Test-Dangerous "Format-Volume -DriveLetter C") "Detects Format-Volume"
+    Assert-Equal $true (Test-Dangerous "Clear-Disk -Number 1") "Detects Clear-Disk"
     Assert-Equal $false (Test-Dangerous "git status") "Safe git status"
     Assert-Equal $false (Test-Dangerous "Get-ChildItem") "Safe Get-ChildItem"
 }
@@ -247,10 +248,10 @@ function Test-Dangerous {
 function Test-ShowHelp {
     . $AskPs1
 
-    $helpOut = (Show-Help | Out-String)
-    Assert-Contains $helpOut "ask.ps1" "Help header"
+    $helpOut = (Show-Help 6>&1 | Out-String)
+    Assert-Contains $helpOut "ask v2.1.0" "Help header"
     Assert-Contains $helpOut "USAGE" "Help usage"
-    Assert-Contains $helpOut "COMMANDS" "Help commands"
+    Assert-Contains $helpOut "PIPING" "Help piping"
 }
 
 function Test-CliVersionAndHelp {
