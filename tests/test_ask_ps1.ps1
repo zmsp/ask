@@ -249,17 +249,17 @@ function Test-ShowHelp {
     . $AskPs1
 
     $helpOut = (Show-Help 6>&1 | Out-String)
-    Assert-Contains $helpOut "ask v2.1.0" "Help header"
+    Assert-Contains $helpOut "ask v2.1.1" "Help header"
     Assert-Contains $helpOut "USAGE" "Help usage"
     Assert-Contains $helpOut "PIPING" "Help piping"
 }
 
 function Test-CliVersionAndHelp {
     $verOut = (& pwsh -NoProfile -File $AskPs1 -v) | Out-String
-    Assert-Contains $verOut "ask v2.1.0" "CLI -v"
+    Assert-Contains $verOut "ask v2.1.1" "CLI -v"
 
     $longVer = (& pwsh -NoProfile -File $AskPs1 --version) | Out-String
-    Assert-Contains $longVer "ask v2.1.0" "CLI --version"
+    Assert-Contains $longVer "ask v2.1.1" "CLI --version"
 
     $helpOut = (& pwsh -NoProfile -File $AskPs1 --help) | Out-String
     Assert-Contains $helpOut "USAGE" "CLI --help"
@@ -281,6 +281,32 @@ function Test-CliBranchValidation {
     Assert-Contains $out "Usage: ask branch <task description>" "Branch argument error"
 }
 
+function Test-ReadExecutionChoice {
+    . $AskPs1
+
+    $env:ASK_MOCK_CHOICE = "n"
+    $resN = Read-ExecutionChoice "Run?"
+    Assert-Equal "n" $resN "Read-ExecutionChoice returns n"
+
+    $env:ASK_MOCK_CHOICE = "c"
+    $resC = Read-ExecutionChoice "Run?"
+    Assert-Equal "c" $resC "Read-ExecutionChoice returns c"
+
+    $env:ASK_MOCK_CHOICE = "e"
+    $resE = Read-ExecutionChoice "Run?"
+    Assert-Equal "e" $resE "Read-ExecutionChoice returns e"
+
+    $env:ASK_MOCK_CHOICE = "y"
+    $resY = Read-ExecutionChoice "Run?"
+    Assert-Equal "y" $resY "Read-ExecutionChoice returns y"
+
+    $env:ASK_MOCK_CHOICE = "yes"
+    $resYes = Read-ExecutionChoice "Run?"
+    Assert-Equal "yes" $resYes "Read-ExecutionChoice returns yes"
+
+    Remove-Item env:ASK_MOCK_CHOICE -ErrorAction SilentlyContinue
+}
+
 # =============================================================================
 #  RUNNER
 # =============================================================================
@@ -299,7 +325,8 @@ $AllTests = @(
     "Test-ShowHelp",
     "Test-CliVersionAndHelp",
     "Test-CliCheatValidation",
-    "Test-CliBranchValidation"
+    "Test-CliBranchValidation",
+    "Test-ReadExecutionChoice"
 )
 
 try {

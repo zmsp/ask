@@ -115,7 +115,7 @@ function Test-FullInstallExecution {
 
     # Verify installed ask.ps1 can be executed directly
     $verOut = (& pwsh -NoProfile -File $destFile --version) | Out-String
-    Assert-Contains $verOut "ask v2.1.0" "Installed binary executes --version"
+    Assert-Contains $verOut "ask v2.1.1" "Installed binary executes --version"
 }
 
 function Test-ProfileIdempotency {

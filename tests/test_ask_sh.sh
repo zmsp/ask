@@ -263,10 +263,10 @@ test_show_help() {
 
 test_cli_version_and_help() {
     local ver_out; ver_out="$("${ASK_SH}" --version)"
-    assert_contains "$ver_out" "ask v2.1.0" "--version output"
+    assert_contains "$ver_out" "ask v2.1.1" "--version output"
 
     local short_ver; short_ver="$("${ASK_SH}" -v)"
-    assert_contains "$short_ver" "ask v2.1.0" "-v output"
+    assert_contains "$short_ver" "ask v2.1.1" "-v output"
 
     local help_out; help_out="$("${ASK_SH}" --help)"
     assert_contains "$help_out" "USAGE" "--help output"
@@ -326,6 +326,25 @@ EOF
     assert_eq "git status --short" "$result" "mock AI --raw query output"
 }
 
+test_read_execution_choice() {
+    source "${ASK_SH}"
+
+    local res_n; res_n="$(printf 'n\n' | read_execution_choice "Run?")"
+    assert_eq "n" "$res_n" "execution choice n"
+
+    local res_c; res_c="$(printf 'c\n' | read_execution_choice "Run?")"
+    assert_eq "c" "$res_c" "execution choice c"
+
+    local res_e; res_e="$(printf 'e\n' | read_execution_choice "Run?")"
+    assert_eq "e" "$res_e" "execution choice e"
+
+    local res_y; res_y="$(printf 'y\n' | read_execution_choice "Run?")"
+    assert_eq "y" "$res_y" "execution choice y"
+
+    local res_yes; res_yes="$(printf 'yes\n' | read_execution_choice "Run?")"
+    assert_eq "yes" "$res_yes" "execution choice yes"
+}
+
 # =============================================================================
 #  RUNNER
 # =============================================================================
@@ -344,6 +363,7 @@ ALL_TESTS=(
     test_cli_cheat_validation
     test_cli_branch_validation
     test_mock_ai_raw_query
+    test_read_execution_choice
 )
 
 echo

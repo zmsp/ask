@@ -114,7 +114,7 @@ test_full_install_execution() {
 
     # Verify executed binary
     local ver_out; ver_out="$("${installed_bin}" --version)"
-    assert_contains "$ver_out" "ask v2.1.0" "installed binary runs --version"
+    assert_contains "$ver_out" "ask v2.1.1" "installed binary runs --version"
 }
 
 test_custom_binary_name() {
@@ -134,7 +134,7 @@ test_custom_binary_name() {
     [[ -x "${installed_bin}" ]] || { echo "    $(red 'FAIL'): custom binary not executable" >&2; return 1; }
 
     local ver_out; ver_out="$("${installed_bin}" --version)"
-    assert_contains "$ver_out" "ask v2.1.0" "custom binary runs --version"
+    assert_contains "$ver_out" "ask v2.1.1" "custom binary runs --version"
 }
 
 test_detect_shell_profile() {

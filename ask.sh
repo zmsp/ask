@@ -17,7 +17,7 @@ set -euo pipefail
 # ── Constants ─────────────────────────────────────────────────────────────────
 CONFIG_FILE="${ASK_CONFIG_FILE:-$HOME/.ask_config}"
 STATS_FILE="${ASK_STATS_FILE:-$HOME/.ask_stats}"
-VERSION="2.1.0"
+VERSION="2.1.1"
 
 # ── Runtime state (all overridable via ~/.ask_config or env vars) ─────────────
 PROVIDER="openai"
@@ -501,19 +501,58 @@ resolve_default_model() {
     esac
 }
 
+# Read single keypress for [n]/[c]/[e], require Enter for [y]/[yes]
+read_execution_choice() {
+    local prompt_str="$1"
+    local first_char=""
+    local rest=""
+    local choice=""
+
+    if [[ -r /dev/tty ]] && [[ -t 0 || -t 1 ]]; then
+        printf '%s' "$prompt_str" > /dev/tty
+        read -r -s -n 1 first_char < /dev/tty 2>/dev/null || true
+        case "$first_char" in
+            [NnCcEe])
+                printf '%s\n' "$first_char" > /dev/tty
+                choice="$first_char"
+                ;;
+            [Yy])
+                printf '%s' "$first_char" > /dev/tty
+                read -r rest < /dev/tty 2>/dev/null || true
+                choice="${first_char}${rest}"
+                ;;
+            "")
+                printf '\n' > /dev/tty
+                choice=""
+                ;;
+            *)
+                printf '%s\n' "$first_char" > /dev/tty
+                choice="$first_char"
+                ;;
+        esac
+    else
+        read -rp "$prompt_str" choice || true
+    fi
+    printf '%s' "$choice"
+}
+
 # Interactive prompt to run, edit, copy, or cancel a suggested command
 prompt_execute() {
     local command="$1"
     local danger_pattern='(rm[[:space:]]+-[^ ]*r|-rf[[:space:]]|sudo[[:space:]]|>[[:space:]]*/dev/|dd[[:space:]]+if=|\|[[:space:]]*(sh|bash|zsh)[[:space:]]*$|chmod[[:space:]]+-R[[:space:]]+[0-7]*7|mkfs)'
     local is_danger=false
+    local prompt_msg
 
     if printf '%s' "$command" | grep -qE "$danger_pattern"; then
         is_danger=true
         echo "$(yellow '⚠  This command looks dangerous.')"
-        read -rp "$(bold 'Type  yes  to run, [e]dit, [c]opy, or [n]o:') " ans < /dev/tty
+        prompt_msg="$(bold 'Type  yes  to run, [e]dit, [c]opy, or [n]o:') "
     else
-        read -rp "$(bold 'Run?') $(dim '[y]es / [e]dit / [c]opy / [n]o:') " ans < /dev/tty
+        prompt_msg="$(bold 'Run?') $(dim '[y]es / [e]dit / [c]opy / [n]o:') "
     fi
+
+    local ans
+    ans="$(read_execution_choice "$prompt_msg")"
 
     case "$ans" in
         yes|[Yy])

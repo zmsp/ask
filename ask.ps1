@@ -20,7 +20,7 @@ $ErrorActionPreference = "Stop"
 # =============================================================================
 #  CONSTANTS
 # =============================================================================
-$VERSION     = "2.1.0"
+$VERSION     = "2.1.1"
 $CONFIG_FILE = if ($env:ASK_CONFIG_FILE) { $env:ASK_CONFIG_FILE } else { Join-Path ($env:USERPROFILE ?? $env:HOME) ".ask_config" }
 $STATS_FILE  = if ($env:ASK_STATS_FILE) { $env:ASK_STATS_FILE } else { Join-Path ($env:USERPROFILE ?? $env:HOME) ".ask_stats" }
 
@@ -626,19 +626,57 @@ function Test-Dangerous {
     return $false
 }
 
+function Read-ExecutionChoice {
+    param([string]$PromptText)
+
+    if ($env:ASK_MOCK_CHOICE) {
+        return $env:ASK_MOCK_CHOICE
+    }
+
+    if ([Console]::IsInputRedirected) {
+        return (Read-Host $PromptText)
+    }
+
+    Write-Host -NoNewline "$PromptText "
+    $keyInfo = [System.Console]::ReadKey($true)
+    $keyChar = $keyInfo.KeyChar
+
+    switch -Regex ($keyChar) {
+        "^[NnCcEe]$" {
+            Write-Host $keyChar
+            return [string]$keyChar
+        }
+        "^[Yy]$" {
+            Write-Host -NoNewline $keyChar
+            $rest = Read-Host
+            return "$keyChar$rest"
+        }
+        default {
+            if ($keyInfo.Key -eq [System.ConsoleKey]::Enter) {
+                Write-Host ""
+                return ""
+            }
+            Write-Host $keyChar
+            return [string]$keyChar
+        }
+    }
+}
+
 function Prompt-Execute {
     param([string]$Cmd)
     $isDanger = Test-Dangerous $Cmd
+    $promptText = ""
 
     if ($isDanger) {
         Write-Host (Yellow "Warning: This command looks dangerous.")
-        $dangerPrompt = Bold "Type  yes  to run, [e]dit, [c]opy, or [n]o"
-        $ans = Read-Host $dangerPrompt
+        $promptText = Bold "Type  yes  to run, [e]dit, [c]opy, or [n]o:"
     } else {
         $runPrompt = Bold "Run?"
-        $runLabel  = Dim "[y]es / [e]dit / [c]opy / [n]o"
-        $ans = Read-Host "$runPrompt $runLabel"
+        $runLabel  = Dim "[y]es / [e]dit / [c]opy / [n]o:"
+        $promptText = "$runPrompt $runLabel"
     }
+
+    $ans = Read-ExecutionChoice $promptText
 
     if ($isDanger) {
         if ($ans -eq "yes") {
