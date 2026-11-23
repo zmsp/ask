@@ -178,7 +178,7 @@ Completion tokens:  410
 Total tokens:       2,760
 
 Queries by provider/model:
-  openai (gpt-4.1-nano)            10
+  openai (gpt-5.6-luna)            10
   ollama (llama3.2)                4
 ```
 
@@ -208,7 +208,7 @@ Or edit directly:
 ```ini
 # ~/.ask_config
 provider=openai          # openai | gemini | ollama
-model=gpt-4.1-nano       # leave blank for cheapest default
+model=gpt-5.6-luna       # leave blank for cheapest default
 max_tokens=200
 ollama_endpoint=http://localhost:11434/v1
 openai_api_key=sk-...
@@ -231,11 +231,14 @@ export VERBOSE=true           # print debug info
 
 | Provider | Default model | Price (input/output per 1M tokens) |
 |----------|--------------|--------------------------------------|
-| `openai` | `gpt-4.1-nano` | $0.10 / $0.40 |
+| `openai` | `gpt-5.6-luna` | $0.20 / $1.20 |
 | `gemini` | `gemini-2.5-flash-lite` | $0.10 / $0.40 |
 | `ollama` | `llama3.2` | Free (runs locally) |
 
-**OpenAI models:** `gpt-4.1-nano` · `gpt-4.1-mini` · `gpt-4.1` · `gpt-4o` · `gpt-4o-mini` · `o3-mini`  
+If your existing config pins the retired OpenAI nano model, run `ask --setup` again or set `model=gpt-5.6-luna` in `~/.ask_config`.
+
+**OpenAI models:** `gpt-5.6-luna` · `gpt-4.1-mini` · `gpt-4.1` · `gpt-4o` · `gpt-4o-mini` · `o3-mini`
+
 **Gemini models:** `gemini-2.5-flash-lite` · `gemini-2.5-flash` · `gemini-2.5-pro` · `gemini-3.5-flash-lite` · `gemini-3.8-flash` · `gemini-flash-latest` (`latest`) · `gemini-flash-lite-latest` · `gemini-pro-latest`  
 **Ollama models:** `llama3.2` · `qwen2.5-coder` · `codellama` · any local model
 

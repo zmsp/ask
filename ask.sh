@@ -5,7 +5,7 @@
 #  Turn plain-English descriptions into shell commands (and run them),
 #  or use it as a general-purpose AI chat layer from your terminal.
 #
-#  Supports:  OpenAI (gpt-4.1-nano default) · Google Gemini (2.5-flash-lite)
+#  Supports:  OpenAI (gpt-5.6-luna default) · Google Gemini (2.5-flash-lite)
 #             Ollama (local / offline / free)
 #  Requires:  curl · jq · bash 3.2+
 #
@@ -90,7 +90,7 @@ run_setup() {
 
     # ── Provider ─────────────────────────────────────────────────────────────
     echo "$(bold 'Choose an AI provider:')"
-    echo "  $(cyan '1)') OpenAI    $(dim '(gpt-4.1-nano — fastest & cheapest)')"
+    echo "  $(cyan '1)') OpenAI    $(dim '(gpt-5.6-luna — low cost)')"
     echo "  $(cyan '2)') Gemini    $(dim '(gemini-2.5-flash-lite — fastest & cheapest)')"
     echo "  $(cyan '3)') Ollama    $(dim '(Local / offline / free — requires ollama)')"
     echo
@@ -108,7 +108,7 @@ run_setup() {
     echo
     if [[ "$PROVIDER" == "openai" ]]; then
         echo "$(bold 'Choose a model:')  $(dim 'https://platform.openai.com/docs/models')"
-        echo "  $(cyan '1)') gpt-4.1-nano   $(dim '← default · cheapest · 1M context')"
+        echo "  $(cyan '1)') gpt-5.6-luna   $(dim '← default · low cost')"
         echo "  $(cyan '2)') gpt-4.1-mini"
         echo "  $(cyan '3)') gpt-4.1"
         echo "  $(cyan '4)') gpt-4o"
@@ -117,14 +117,14 @@ run_setup() {
         echo "  $(cyan '7)') Custom…"
         read -rp "$(bold 'Model [1-7, default 1]:') " m < /dev/tty
         case "${m:-1}" in
-            1) MODEL="gpt-4.1-nano" ;;
+            1) MODEL="gpt-5.6-luna" ;;
             2) MODEL="gpt-4.1-mini" ;;
             3) MODEL="gpt-4.1" ;;
             4) MODEL="gpt-4o" ;;
             5) MODEL="gpt-4o-mini" ;;
             6) MODEL="o3-mini" ;;
             7) read -rp "Model name: " MODEL < /dev/tty ;;
-            *) MODEL="gpt-4.1-nano" ;;
+            *) MODEL="gpt-5.6-luna" ;;
         esac
     elif [[ "$PROVIDER" == "gemini" ]]; then
         echo "$(bold 'Choose a model:')  $(dim 'https://ai.google.dev/gemini-api/docs/models')"
@@ -249,7 +249,7 @@ $(bold 'ENV VARS')  (take priority over config file)
   OPENAI_API_KEY, GEMINI_API_KEY, VERBOSE=true
 
 $(bold 'PROVIDERS & DEFAULT MODELS')
-  openai  →  gpt-4.1-nano            \$0.10 / 1M input tokens
+  openai  →  gpt-5.6-luna            \$0.20 / 1M input tokens
   gemini  →  gemini-2.5-flash-lite   \$0.10 / 1M input tokens
   ollama  →  llama3.2                Free / offline
 
@@ -407,10 +407,13 @@ EOF
 call_openai() {
     local payload response
     payload=$(jq -n \
-        --arg  model  "$MODEL" \
-        --arg  msg    "$prompt" \
+        --arg model "$MODEL" \
+        --arg msg "$prompt" \
         --argjson max "$MAX_TOKENS" \
-        '{model:$model,messages:[{role:"user",content:$msg}],temperature:0,max_tokens:$max}')
+        '{model:$model,messages:[{role:"user",content:$msg}]}
+         + (if $model == "gpt-5.6-luna"
+            then {max_completion_tokens:$max,reasoning_effort:"none"}
+            else {max_tokens:$max,temperature:0} end)')
 
     response=$(curl -fsSL https://api.openai.com/v1/chat/completions \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -497,7 +500,7 @@ resolve_default_model() {
     case "$PROVIDER" in
         gemini) MODEL="gemini-2.5-flash-lite" ;;
         ollama) MODEL="llama3.2" ;;
-        *)      MODEL="gpt-4.1-nano" ;;
+        *)      MODEL="gpt-5.6-luna" ;;
     esac
 }
 
