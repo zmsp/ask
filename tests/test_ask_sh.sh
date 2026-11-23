@@ -182,7 +182,7 @@ test_resolve_default_model() {
     PROVIDER="openai"
     MODEL=""
     resolve_default_model
-    assert_eq "gpt-4.1-nano" "$MODEL" "default openai model"
+    assert_eq "gpt-5.6-luna" "$MODEL" "default openai model"
 
     PROVIDER="gemini"
     MODEL=""
@@ -227,8 +227,8 @@ test_stats_record_and_show() {
     local json_openai='{"usage":{"prompt_tokens":100,"completion_tokens":50}}'
     local json_gemini='{"usageMetadata":{"promptTokenCount":50,"candidatesTokenCount":20}}'
 
-    record_stats "openai" "gpt-4.1-nano" "$json_openai"
-    record_stats "openai" "gpt-4.1-nano" "$json_openai"
+    record_stats "openai" "gpt-5.6-luna" "$json_openai"
+    record_stats "openai" "gpt-5.6-luna" "$json_openai"
     record_stats "gemini" "gemini-2.5-flash-lite" "$json_gemini"
 
     [[ -f "${ASK_STATS_FILE}" ]] || return 1
@@ -237,7 +237,7 @@ test_stats_record_and_show() {
     assert_contains "$output" "Total queries:      3" "stats query count"
     assert_contains "$output" "Prompt tokens:      250" "stats prompt tokens"
     assert_contains "$output" "Completion tokens:  120" "stats completion tokens"
-    assert_contains "$output" "openai (gpt-4.1-nano)" "stats shows openai model"
+    assert_contains "$output" "openai (gpt-5.6-luna)" "stats shows openai model"
     assert_contains "$output" "gemini (gemini-2.5-flash-lite)" "stats shows gemini model"
 }
 
@@ -259,6 +259,12 @@ test_show_help() {
     assert_contains "$help_txt" "AI terminal assistant" "help header"
     assert_contains "$help_txt" "USAGE" "help usage"
     assert_contains "$help_txt" "PIPING" "help piping"
+}
+
+test_openai_help_price() {
+    local help
+    help=$("${ASK_SH}" --help)
+    assert_contains "$help" 'gpt-5.6-luna            $0.20 / 1M input tokens' "OpenAI default and literal price"
 }
 
 test_cli_version_and_help() {
@@ -296,6 +302,12 @@ test_mock_ai_raw_query() {
 
     cat << 'EOF' > "${mock_bin_dir}/curl"
 #!/bin/sh
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -d) printf '%s' "$2" > "$ASK_TEST_REQUEST"; shift 2 ;;
+        *) shift ;;
+    esac
+done
 cat << 'RESPONSE'
 {
   "choices": [
@@ -317,13 +329,22 @@ EOF
     # Set dummy config so it doesn't trigger setup wizard
     cat << 'EOF' > "${ASK_CONFIG_FILE}"
 provider=openai
-model=gpt-4.1-nano
 openai_api_key=mock_key
 EOF
 
-    local result
-    result=$(PATH="${mock_bin_dir}:${PATH}" "${ASK_SH}" --raw "show status")
-    assert_eq "git status --short" "$result" "mock AI --raw query output"
+    local result request
+    request="${TEST_TMP_DIR}/request.json"
+    result=$(PATH="${mock_bin_dir}:${PATH}" ASK_TEST_REQUEST="$request" "${ASK_SH}" --raw "show status")
+    assert_eq "git status --short" "$result" "mock AI --raw query output" || return 1
+    jq -e '.model == "gpt-5.6-luna" and .reasoning_effort == "none"
+        and (.max_completion_tokens | type == "number")
+        and (has("temperature") | not) and (has("max_tokens") | not)' "$request" >/dev/null || return 1
+
+    printf 'model=gpt-4.1-mini\n' >> "${ASK_CONFIG_FILE}"
+    result=$(PATH="${mock_bin_dir}:${PATH}" ASK_TEST_REQUEST="$request" "${ASK_SH}" --raw "show status")
+    assert_eq "git status --short" "$result" "explicit model query output" || return 1
+    jq -e '.model == "gpt-4.1-mini" and .temperature == 0
+        and (.max_tokens | type == "number") and (has("reasoning_effort") | not)' "$request" >/dev/null
 }
 
 test_read_execution_choice() {
@@ -360,6 +381,7 @@ ALL_TESTS=(
     test_show_init_snippet
     test_show_help
     test_cli_version_and_help
+    test_openai_help_price
     test_cli_cheat_validation
     test_cli_branch_validation
     test_mock_ai_raw_query

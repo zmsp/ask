@@ -166,7 +166,7 @@ function Test-ResolveDefaultModel {
     $script:Provider = "openai"
     $script:Model    = ""
     Resolve-DefaultModel
-    Assert-Equal "gpt-4.1-nano" $script:Model "Default openai model"
+    Assert-Equal "gpt-5.6-luna" $script:Model "Default openai model"
 
     $script:Provider = "gemini"
     $script:Model    = ""
@@ -206,15 +206,15 @@ function Test-RecordStatsAndShow {
 
     if (Test-Path $env:ASK_STATS_FILE) { Remove-Item $env:ASK_STATS_FILE }
 
-    Record-Stats "openai" "gpt-4.1-nano" 150 75
-    Record-Stats "openai" "gpt-4.1-nano" 50 25
+    Record-Stats "openai" "gpt-5.6-luna" 150 75
+    Record-Stats "openai" "gpt-5.6-luna" 50 25
     Record-Stats "gemini" "gemini-2.5-flash-lite" 100 50
 
     $output = (Show-Stats 6>&1 | Out-String)
     Assert-Contains $output "Total queries:      3" "Show-Stats query count"
     Assert-Contains $output "Prompt tokens:      300" "Show-Stats prompt tokens"
     Assert-Contains $output "Completion tokens:  150" "Show-Stats completion tokens"
-    Assert-Contains $output "openai (gpt-4.1-nano)" "Show-Stats model breakdown"
+    Assert-Contains $output "openai (gpt-5.6-luna)" "Show-Stats model breakdown"
 }
 
 function Test-ShowInitSnippet {
@@ -281,6 +281,38 @@ function Test-CliBranchValidation {
     Assert-Contains $out "Usage: ask branch <task description>" "Branch argument error"
 }
 
+function Test-OpenAIDefaultPayload {
+    . $AskPs1
+    $script:Provider = "openai"
+    $script:Model = ""
+    $script:MaxTokens = 128
+    $script:OpenAIApiKey = "mock_key"
+    Resolve-DefaultModel
+
+    function Invoke-RestMethod {
+        param($Uri, $Method, $Headers, $Body)
+        $script:RequestUri = $Uri
+        $script:RequestPayload = ConvertFrom-Json $Body
+        @{ choices = @(@{ message = @{ content = "git status --short" } }); usage = $null }
+    }
+
+    $result = Invoke-OpenAI "show status"
+    Assert-Equal "git status --short" $result "response text"
+    Assert-Equal "https://api.openai.com/v1/chat/completions" $script:RequestUri "OpenAI endpoint"
+    Assert-Equal "gpt-5.6-luna" $script:RequestPayload.model "default model sent on the wire"
+    Assert-Equal 128 $script:RequestPayload.max_completion_tokens "retained token cap"
+    Assert-Equal "none" $script:RequestPayload.reasoning_effort "nonreasoning behavior"
+    Assert-Equal $false ($script:RequestPayload.PSObject.Properties.Name -contains "temperature") "Luna omits temperature"
+    Assert-Equal $false ($script:RequestPayload.PSObject.Properties.Name -contains "max_tokens") "Luna omits legacy token field"
+
+    $script:Model = "gpt-4.1-mini"
+    $null = Invoke-OpenAI "show status"
+    Assert-Equal "gpt-4.1-mini" $script:RequestPayload.model "explicit override"
+    Assert-Equal 128 $script:RequestPayload.max_tokens "legacy token field unchanged"
+    Assert-Equal 0 $script:RequestPayload.temperature "legacy temperature unchanged"
+    Assert-Equal $false ($script:RequestPayload.PSObject.Properties.Name -contains "reasoning_effort") "no injected reasoning setting for override"
+}
+
 function Test-ReadExecutionChoice {
     . $AskPs1
 
@@ -326,6 +358,7 @@ $AllTests = @(
     "Test-CliVersionAndHelp",
     "Test-CliCheatValidation",
     "Test-CliBranchValidation",
+    "Test-OpenAIDefaultPayload",
     "Test-ReadExecutionChoice"
 )
 

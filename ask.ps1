@@ -5,7 +5,7 @@
 #  Turn plain-English descriptions into shell commands (and run them),
 #  or use it as a general-purpose AI chat layer from your terminal.
 #
-#  Supports:  OpenAI (gpt-4.1-nano default) · Google Gemini (2.5-flash-lite)
+#  Supports:  OpenAI (gpt-5.6-luna default) · Google Gemini (2.5-flash-lite)
 #             Ollama (local / offline / free)
 #  Requires:  PowerShell 5.1+ (Windows) or PowerShell 7+ (cross-platform)
 #
@@ -111,7 +111,7 @@ function Run-Setup {
     $c1 = Cyan "1)"
     $c2 = Cyan "2)"
     $c3 = Cyan "3)"
-    $d1 = Dim "(gpt-4.1-nano — fastest & cheapest)"
+    $d1 = Dim "(gpt-5.6-luna — low cost)"
     $d2 = Dim "(gemini-2.5-flash-lite — fastest & cheapest)"
     $d3 = Dim "(Local / offline / free — requires ollama)"
     Write-Host "  $c1 OpenAI    $d1"
@@ -140,8 +140,8 @@ function Run-Setup {
         $n3 = Cyan "3)"
         $n4 = Cyan "4)"
         $n5 = Cyan "5)"
-        $def = Dim "<- default, cheapest, 1M context"
-        Write-Host "  $n1 gpt-4.1-nano   $def"
+        $def = Dim "<- default, low cost"
+        Write-Host "  $n1 gpt-5.6-luna   $def"
         Write-Host "  $n2 gpt-4.1-mini"
         Write-Host "  $n3 gpt-4.1"
         Write-Host "  $n4 gpt-4o"
@@ -156,7 +156,7 @@ function Run-Setup {
             "5"     { "gpt-4o-mini" }
             "6"     { "o3-mini" }
             "7"     { Read-Host "Model name" }
-            default { "gpt-4.1-nano" }
+            default { "gpt-5.6-luna" }
         }
     } elseif ($script:Provider -eq "gemini") {
         $url = Dim "https://ai.google.dev/gemini-api/docs/models"
@@ -331,7 +331,7 @@ $bEnv  (take priority over config file)
   OPENAI_API_KEY, GEMINI_API_KEY, VERBOSE=true
 
 $bProviders
-  openai  ->  gpt-4.1-nano            `$0.10 / 1M input tokens
+  openai  ->  gpt-5.6-luna            `$0.20 / 1M input tokens
   gemini  ->  gemini-2.5-flash-lite   `$0.10 / 1M input tokens
   ollama  ->  llama3.2                Free / offline
 
@@ -477,12 +477,18 @@ Set-PSReadLineKeyHandler -Chord 'Ctrl+x,Ctrl+a' -ScriptBlock {
 function Invoke-OpenAI {
     param([string]$Prompt)
 
-    $body = @{
-        model       = $script:Model
-        messages    = @(@{ role = "user"; content = $Prompt })
-        temperature = 0
-        max_tokens  = $script:MaxTokens
-    } | ConvertTo-Json -Depth 5
+    $payload = @{
+        model    = $script:Model
+        messages = @(@{ role = "user"; content = $Prompt })
+    }
+    if ($script:Model -eq "gpt-5.6-luna") {
+        $payload.max_completion_tokens = $script:MaxTokens
+        $payload.reasoning_effort = "none"
+    } else {
+        $payload.max_tokens = $script:MaxTokens
+        $payload.temperature = 0
+    }
+    $body = $payload | ConvertTo-Json -Depth 5
 
     try {
         $response = Invoke-RestMethod `
@@ -603,7 +609,7 @@ function Resolve-DefaultModel {
     $script:Model = switch ($script:Provider) {
         "gemini" { "gemini-2.5-flash-lite" }
         "ollama" { "llama3.2" }
-        default  { "gpt-4.1-nano" }
+        default  { "gpt-5.6-luna" }
     }
 }
 
